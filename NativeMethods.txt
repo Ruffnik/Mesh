@@ -1,0 +1,4 @@
+SHGetKnownFolderPath
+CoTaskMemFree
+GetPrivateProfileString
+FOLDERID_SkyDrive
