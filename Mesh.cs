@@ -12,12 +12,19 @@ static class Mesh
     static void Main()
     {
         ApplicationConfiguration.Initialize();
-        foreach (var Game in Directory.GetFiles(CWD, "*.ini"))
-            ProcessGame(Game);
+        try
+        {
+            foreach (var Game in Directory.GetFiles(CWD, "*.ini"))
+                ProcessGame(Game);
+        }
+        catch (Exception Ex)
+        {
+            MessageBox.Show($"{Ex}", Caption);
+        }
 #if RELEASE
         TaskService Service = new();
         var Definition = Service.NewTask();
-        Definition.Triggers.Add(new WeeklyTrigger());
+        Definition.Triggers.Add(new DailyTrigger());
         Definition.Actions.Add(Path.ChangeExtension(Environment.GetCommandLineArgs()[0], "exe"));
         Definition.Settings.StartWhenAvailable = true;
         Service.RootFolder.RegisterTaskDefinition(Caption, Definition);
@@ -69,16 +76,20 @@ static class Mesh
     static bool TryProcessFolder(string CWD, string Folder, string Game)
     {
         var Local = new FileInfo(Path.GetFullPath(Environment.ExpandEnvironmentVariables(Resolve(Folder))));
-        var Cloud = new FileInfo(Path.GetFullPath(Path.Combine(CWD, Local.Name)));
+        var Cloud = new FileInfo(Path.GetFullPath(Path.Combine(CWD, Game, Local.Name)));
         if ((Local.Attributes.HasFlag(FileAttributes.ReparsePoint) && Cloud.Attributes.HasFlag(FileAttributes.ReparsePoint)) || (!Directory.Exists(Local.FullName) && !Directory.Exists(Cloud.FullName)))
             return false;
         else
+        {
+            if (!Directory.Exists(Cloud.DirectoryName))
+                Directory.CreateDirectory(Cloud.DirectoryName!);
             return TryUniSyncFolder(Local, Cloud) || TryUniSyncFolder(Cloud, Local) || TryBiSyncFolder(Local, Cloud, Game);
+        }
     }
 
     private static string Resolve(string RawPath)
     {
-        const char Separator = ':';
+        const char Separator = '|';
         if (RawPath.Contains(Separator))
         {
             var Parts = RawPath.Split(Separator);
