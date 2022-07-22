@@ -27,6 +27,7 @@ static class Mesh
         Definition.Triggers.Add(new DailyTrigger());
         Definition.Actions.Add(Path.ChangeExtension(Environment.GetCommandLineArgs()[0], "exe"));
         Definition.Settings.StartWhenAvailable = true;
+        Definition.Principal.RunLevel = TaskRunLevel.Highest;
         Service.RootFolder.RegisterTaskDefinition(Caption, Definition);
 #endif
     }
